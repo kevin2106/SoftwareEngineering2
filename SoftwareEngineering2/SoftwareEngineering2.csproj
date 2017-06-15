@@ -41,6 +41,10 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Adapter\IDrawingManager.cs" />
+    <Compile Include="Adapter\IInputManager.cs" />
+    <Compile Include="Adapter\InputManager.cs" />
+    <Compile Include="Adapter\MonoGameDrawManager.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="InterfaceObjects\Button.cs" />

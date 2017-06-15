@@ -60,7 +60,6 @@ namespace SoftwareEngineering2
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             Font = Content.Load<SpriteFont>("font");
             
-            // TODO: use this.Content to load your game content here
             _drawVisitor = new DrawVisitor(_spriteBatch);
             _updateVisitor = new UpdateVisitor(_spriteBatch);
 
