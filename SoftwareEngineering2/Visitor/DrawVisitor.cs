@@ -6,20 +6,31 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SoftwareEngineering2.InterfaceObjects;
+using SoftwareEngineering2.Decorator;
+using SoftwareEngineering2.Adapter;
 
 namespace SoftwareEngineering2.Visitor
 {
     class DrawVisitor : IVisitor
     {
-        private readonly SpriteBatch _spriteBatch;
-        public DrawVisitor(SpriteBatch spriteBatch)
+        private IDrawingManager drawAdapter;
+        public DrawVisitor(IDrawingManager adapter)
         {
-            //need something like spritebatch/screenmanager or something so i can start drawing
-            _spriteBatch = spriteBatch;
+            this.drawAdapter = adapter;
         }
-        public void Visit(IGuiElement guiElement)
+        public void Visit(LabelDecorator label)
         {
-            guiElement.Draw(_spriteBatch);
+            drawAdapter.Draw(label);
+        }
+
+        public void Visit(ClickableDecorator button)
+        {
+            drawAdapter.Draw(button);  
+        }
+
+        public void Visit(InputDecorator input)
+        {
+            drawAdapter.Draw(input);
         }
     }
 }

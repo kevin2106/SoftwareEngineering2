@@ -7,20 +7,31 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SoftwareEngineering2.InterfaceObjects;
+using SoftwareEngineering2.Adapter;
+using SoftwareEngineering2.Decorator;
 
 namespace SoftwareEngineering2.Visitor
 {
     class UpdateVisitor : IVisitor
     {
-        private readonly SpriteBatch _spriteBatch;
-        public UpdateVisitor(SpriteBatch spriteBatch)
+        private IDrawingManager adapter;
+        public UpdateVisitor(IDrawingManager adapter)
         {
-            _spriteBatch = spriteBatch;
+            this.adapter = adapter;
         }
 
-        public void Visit(IGuiElement guiElement)
+        public void Visit(LabelDecorator label)
         {
-            guiElement.Update();
+        }
+
+        public void Visit(ClickableDecorator button)
+        {
+            adapter.Update(button);
+        }
+
+        public void Visit(InputDecorator input)
+        {
+            adapter.Update(input);
         }
     }
 }

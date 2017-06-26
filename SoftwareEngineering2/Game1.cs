@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework.Input;
 using SoftwareEngineering2.Visitor;
 using SoftwareEngineering2.InterfaceObjects;
 using SoftwareEngineering2.Iterator;
+using SoftwareEngineering2.Factory;
+using SoftwareEngineering2.Adapter;
 
 namespace SoftwareEngineering2
 {
@@ -17,6 +19,7 @@ namespace SoftwareEngineering2
         private IVisitor _drawVisitor;
         private IVisitor _updateVisitor;
 
+        private IGuiElementCollection mainScreenElements, labelScreenElements, inputScreenElements;
         private IGuiElementCollection collection;
 
         readonly GraphicsDeviceManager _graphics;
@@ -26,13 +29,16 @@ namespace SoftwareEngineering2
 
         public static ScreenManager CurrentScreen;
 
-        private List<IGuiElement> mainWindowElements, labelWindowElements, inputWindowElements;
+        private IScreenFactory screenFactory;
+        private IDrawingManager drawAdapter;
+
 
         public Game1()
         {
 
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            screenFactory = new ScreenFactory(_graphics);
             
             CurrentScreen = ScreenManager.MainWindow;
         }
@@ -59,42 +65,16 @@ namespace SoftwareEngineering2
             // Create a new SpriteBatch, which can be used to draw textures.
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             Font = Content.Load<SpriteFont>("font");
-            
-            _drawVisitor = new DrawVisitor(_spriteBatch);
-            _updateVisitor = new UpdateVisitor(_spriteBatch);
 
-            //MainWindow
-            mainWindowElements = new List<IGuiElement>()
-            {
-                new Label("MainWindow", new Vector2(5, 5), Color.Black),
-                new Button(Color.Black, Color.White, new Vector2(250, 50), "Input window",
-                    new Texture2D(_graphics.GraphicsDevice, 150, 40), ScreenManager.InputWindow),
-                new Button(Color.Black, Color.White, new Vector2(250, 100), "Label window",
-                    new Texture2D(_graphics.GraphicsDevice, 150, 40), ScreenManager.LabelWindow),
-                new Button(Color.Black, Color.White, new Vector2(250, 150), "Exit",
-                    new Texture2D(_graphics.GraphicsDevice, 150, 40), ScreenManager.Exit)
-            };
+            drawAdapter = new MonoGameDrawManager(_spriteBatch);
+            _drawVisitor = new DrawVisitor(drawAdapter);
+            _updateVisitor = new UpdateVisitor(drawAdapter);
 
-            labelWindowElements = new List<IGuiElement>()
-            {
-                new Label("LabelWindow", new Vector2(5, 5), Color.Black),
-                new Label("I am a label", new Vector2(250, 50), Color.Black),
-                new Button(Color.Black, Color.White, new Vector2(250, 150), "Back",
-                    new Texture2D(_graphics.GraphicsDevice, 150, 40), ScreenManager.MainWindow)
-            };
+            mainScreenElements = screenFactory.CreateHomeCollectionScreen();
+            labelScreenElements = screenFactory.CreateLabelCollectionScreen();
+            inputScreenElements = screenFactory.CreateInputCollectionScreen();
 
-            inputWindowElements = new List<IGuiElement>()
-            {
-                new Label("InputWindow", new Vector2(5, 5), Color.Black),
-                new TextField(Color.White, Color.Black, new Vector2(250, 90), new List<char>(), new Texture2D(_graphics.GraphicsDevice, 150, 40)),
-                new Button(Color.Black, Color.White, new Vector2(250, 150), "Back",
-                    new Texture2D(_graphics.GraphicsDevice, 150, 40), ScreenManager.MainWindow)
-            };
-
-            collection = new GuiElementCollection(mainWindowElements);
-            //_collection.AddGuiElement(new Label("I am a label", new Vector2(50, 35), Color.Black));
-            //_collection.AddGuiElement(new TextField(Color.White, Color.Black, new Vector2(50, 90), new List<char>(), new Texture2D(_graphics.GraphicsDevice, 75, 20)));
-
+            collection = screenFactory.CreateHomeCollectionScreen();
         }
 
         /// <summary>
@@ -116,48 +96,32 @@ namespace SoftwareEngineering2
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-
-            IIterator iterator = collection.Iterator();
-            while (iterator.HasNext())
-            {
-                _updateVisitor.Visit(iterator.Next());
-            }
-
             // TODO: Add your update logic here
             switch (CurrentScreen)
             {
                 case ScreenManager.MainWindow:
-                    UpdateMainWindow(gameTime);
+                    collection = mainScreenElements;
                     break;
                 case ScreenManager.InputWindow:
-                    UpdateInputWindow(gameTime);
+                    collection = inputScreenElements;
                     break;
                 case ScreenManager.LabelWindow:
-                    UpdateLabelWindow(gameTime);
+                    collection = labelScreenElements;
                     break;
                 case ScreenManager.Exit:
-                    //Exit();
+                    Exit();
                     break;
 
             }
-            
+
+            IIterator iterator = collection.Iterator();
+            while (iterator.HasNext())
+            {
+                var guiElement = iterator.Next();
+                guiElement.Accept(_updateVisitor);
+            }
 
             base.Update(gameTime);
-        }
-
-        void UpdateMainWindow(GameTime gameTime)
-        {
-            collection = new GuiElementCollection(mainWindowElements);
-        }
-
-        void UpdateLabelWindow(GameTime gameTime)
-        {
-            collection = new GuiElementCollection(labelWindowElements);
-        }
-
-        void UpdateInputWindow(GameTime gameTime)
-        {
-            collection = new GuiElementCollection(inputWindowElements);
         }
 
         /// <summary>
@@ -168,13 +132,13 @@ namespace SoftwareEngineering2
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
             IIterator iterator = collection.Iterator();
             while (iterator.HasNext())
             {
-                _drawVisitor.Visit(iterator.Next());
+                var guiElement = iterator.Next();
+                guiElement.Accept(_drawVisitor);
             }
-            
+
             base.Draw(gameTime);
         }
     }

@@ -1,4 +1,5 @@
-﻿using SoftwareEngineering2.InterfaceObjects;
+﻿using SoftwareEngineering2.Decorator;
+using SoftwareEngineering2.InterfaceObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,10 @@ namespace SoftwareEngineering2.Adapter
 {
     interface IDrawingManager
     {
-        void Draw(Button button);
-        void Draw(Label label);
-        void Draw(TextField textField);
+        void Draw(ClickableDecorator button);
+        void Draw(LabelDecorator label);
+        void Draw(InputDecorator textField);
+        void Update(ClickableDecorator button);
+        void Update(InputDecorator inputField);
     }
 }
